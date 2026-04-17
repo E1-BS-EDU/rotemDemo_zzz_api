@@ -8,10 +8,10 @@
 		<version>3.2.9</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.e1portal</groupId>
-	<artifactId>e1portal.api</artifactId>
+	<groupId>com.rotemDemo</groupId>
+	<artifactId>rotemDemo.api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>e1portal.zzz.api</name>
+	<name>rotemDemo.zzz.api</name>
 	<description>Portal api service</description>
 	<url/>
 	<licenses>
