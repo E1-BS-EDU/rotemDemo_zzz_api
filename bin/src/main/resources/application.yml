@@ -1,0 +1,54 @@
+server:
+  port: 8081
+
+spring:
+  # 1. Servlet & Multipart 설정
+  servlet:
+    multipart:
+      max-file-size: 2000MB      # [수정] max_file_size -> max-file-size
+      max-request-size: 2000MB
+    encoding:                    # [수정] content-type 대신 encoding 설정 권장
+      charset: UTF-8
+      enabled: true
+      force: true
+
+  # 2. Devtools & Thymeleaf
+  devtools:
+    livereload:
+      enabled: true
+  thymeleaf:
+    enabled: true
+    cache: false
+    mode: HTML
+    suffix: .html
+    prefix: classpath:/templates/
+    check-template-location: true
+    encoding: UTF-8
+
+  # 3. DataSource 설정 (가장 중요: 들여쓰기 엄수)
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # [수정] url 라인 들여쓰기 맞춤
+    url: jdbc:mysql://192.168.0.32:3306/emp?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=utf8&connectionCollation=utf8_general_ci&allowPublicKeyRetrieval=true&allowMultiQueries=true&profileSQL=true&logger=Slf4JLogger&maxQuerySizeToLog=999999
+    username: root
+    password: 1234
+
+    # HikariCP 설정
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-init-sql: SET NAMES utf8 COLLATE utf8_general_ci
+      # [수정] connection-timeout 들여쓰기 맞춤
+      connection-timeout: 60000 
+      max-lifetime: 1800000
+      idle-timeout: 600000
+
+# MyBatis 설정
+mybatis:
+  mapper-locations: classpath:mybatis/sql/*.xml
+  config-location: classpath:mybatis/config/mybatis-config.xml
+
+# JWT 설정
+jwt:
+  secret-key: e1portal_secret_key_must_be_long_enough_for_security_256bit
+  expiration: 3600000

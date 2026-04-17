@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rotemDemo.zzz.api.unit.mapper.DeptMapper">
+
+    <select id="selectDeptList" parameterType="hashmap" resultType="CamelMap">
+      select 
+            dept_cd,
+            dept_nm,
+            dept_parent_cd,
+		    join_date,
+		    retire_date,
+            use_yn
+        from zzz_dept_info
+	    <where>
+            use_yn = 'Y'
+            <if test="childOnly != null and childOnly != ''">
+                AND dept_parent_cd is not null
+                AND dept_parent_cd <![CDATA[ <> ]]> ''
+            </if>
+		    <if test="empDeptAuth != null and empDeptAuth.size() > 0">
+                AND (dept_parent_cd in
+				<foreach collection="empDeptAuth" item="empDeptAuthItem" open="(" separator="," close=")">
+		      		#{empDeptAuthItem}
+				</foreach>
+				OR dept_cd in
+				<foreach collection="empDeptAuth" item="empDeptAuthItem" open="(" separator="," close=")">
+		      		#{empDeptAuthItem}
+				</foreach>
+				)
+			</if>            
+	        <if test="deptCd != null and deptCd != ''">
+	            AND dept_cd =  #{deptCd}
+	        </if>
+	        <if test="deptNm != null and deptNm != ''">
+	            AND dept_nm LIKE CONCAT('%', #{deptNm}, '%')
+	        </if>
+	    </where>
+        order by dept_cd asc
+    </select>
+    
+    <select id="selectDeptIncludeSubList" parameterType="hashmap" resultType="CamelMap">
+       WITH RECURSIVE dept_tree AS (
+		    SELECT 
+		        dept_cd,
+		        dept_nm,
+		        dept_parent_cd,
+		        join_date,
+		        retire_date,
+		        use_yn
+		    FROM 
+		        zzz_dept_info
+		    WHERE  dept_cd = #{deptCd} 
+             AND use_yn = 'Y'         
+		    UNION ALL
+		    SELECT 
+		        d.dept_cd,
+		        d.dept_nm,
+		        d.dept_parent_cd,
+		        d.join_date,
+		        d.retire_date,
+		        d.use_yn
+		    FROM 
+		        zzz_dept_info d
+		    INNER JOIN 
+		        dept_tree dh ON d.dept_parent_cd = dh.dept_cd
+		    WHERE 
+		        d.use_yn = 'Y'
+		)
+		select
+		     a.dept_cd
+            ,a.dept_nm 
+            ,a.join_date
+            ,a.retire_date
+            ,a.use_yn
+		from dept_tree a
+
+    </select>
+
+
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rotemDemo.zzz.api.unit.mapper.ProjectMapper">
+
+<select id="selectProjectList" parameterType="hashmap" resultType="CamelMap">
+    select p.project_cd
+         , p.project_nm
+         , p.contract_sd
+         , p.contract_ed
+         , p.actual_input_sd
+         , p.actual_end_ed
+         , p.emp_id
+         , e.emp_nm
+         , p.use_yn
+         , p.reg_dtm
+         , p.reg_emp_id
+         , p.mod_dtm
+         , p.mod_emp_id
+         , concat(p.contract_sd, ' ~ ', p.contract_ed) as projectDate
+     from zzz_prjmngt_info p
+left join zzz_emp_info e
+       on e.emp_id = p.emp_id
+    <where>
+        <if test="keyword != null and keyword != ''">
+            AND (
+                p.project_cd LIKE CONCAT('%', #{keyword}, '%')
+                OR p.project_nm LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+        <if test="projectCd != null and projectCd != ''">
+            AND p.project_cd =  #{projectCd}
+        </if>
+        <if test="projectNm != null and projectNm != ''">
+            AND p.project_nm LIKE CONCAT('%', #{projectNm}, '%')
+        </if>
+    </where>
+</select>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rotemDemo.zzz.api.auth.mapper.AuthMapper">
+	
+	<select id="selectBtnAuth" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+		      IFNULL(MAX(a.sys_id), #{sysId})           AS sysId
+		    , IFNULL(MAX(a.menu_cd), #{menuCd})         AS menuCd
+		    , IFNULL(MAX(a.role_cd), 'N')         		AS role_cd
+		    , IFNULL(MAX(a.sel_auth_yn), 'N')           AS selAuthYn
+		    , IFNULL(MAX(a.add_auth_yn), 'N')           AS addAuthYn
+		    , IFNULL(MAX(a.mdfy_auth_yn), 'N')          AS mdfyAuthYn
+		    , IFNULL(MAX(a.del_auth_yn), 'N')           AS delAuthYn
+		    , IFNULL(MAX(a.excl_up_auth_yn), 'N')       AS exclUpAuthYn
+		    , IFNULL(MAX(a.excl_down_auth_yn), 'N')     AS exclDownAuthYn
+		    , IFNULL(MAX(a.upld_auth_yn), 'N')          AS upldAuthYn
+		    , IFNULL(MAX(a.down_auth_yn), 'N')          AS downAuthYn
+		  FROM zzz_role_auth a
+		 INNER JOIN zzz_role_user_auth b 
+		    ON a.sys_id = b.sys_id 
+		   AND a.role_cd = b.role_cd 
+		 WHERE a.sys_id = #{sysId}
+		   AND a.menu_cd = #{menuCd}
+		   AND b.emp_id = #{empId}
+		   AND b.use_yn = 'Y'
+	</select>	         
+
+</mapper>

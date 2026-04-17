@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rotemDemo.zzz.api.unit.mapper.CommMapper">
+
+    <select id="selectCommList" parameterType="hashMap" resultType="CamelMap">
+		SELECT com_cd_id
+			 , com_cd
+			 , com_cd_expl_sbc
+			 , sort_sn
+			 , supi_com_cd
+			 , supi_com_cd_id
+			 , rel_com_cd
+			 , use_yn
+			 , sys_id
+			 <choose>
+			 	<when test="lang == 'en'">
+			 , com_cd_eng_nm AS com_cd_nm
+			 	</when>
+				<otherwise>
+			 , com_cd_nm AS com_cd_nm
+				</otherwise>
+			 </choose>
+		  FROM rotemDemo_zzz.zzz_code_info
+		 WHERE supi_com_cd = #{supiComCd}
+		<if test="sysId != null and sysId != ''">
+		   AND sys_id = #{sysId}
+		</if>
+		 ORDER BY sort_sn
+    </select>
+
+    <select id="selectCommMultiList" parameterType="hashMap" resultType="CamelMap">
+		SELECT com_cd_id
+			 , com_cd
+			 , com_cd_expl_sbc
+			 , sort_sn
+			 , supi_com_cd
+			 , supi_com_cd_id
+			 , rel_com_cd
+			 , use_yn
+			 , sys_id
+			 <choose>
+			 	<when test="lang == 'en'">
+			 , com_cd_eng_nm AS com_cd_nm
+			 	</when>
+				<otherwise>
+			 , com_cd_nm AS com_cd_nm
+				</otherwise>
+			 </choose>
+		  FROM rotemDemo_zzz.zzz_code_info
+		 WHERE supi_com_cd IN
+        <foreach collection="supiComCd" item="item" open="(" close=")" separator=",">
+			   #{item}
+		</foreach>
+		<if test="sysId != null and sysId != ''">
+		   AND sys_id = #{sysId}
+		</if>
+		 ORDER BY sort_sn
+    </select>
+
+	<select id="selectSystemList" parameterType="hashmap" resultType="CamelMap">
+		SELECT sys_id
+			 <choose>
+			 	<when test="lang == 'en'">
+			 , sys_eng_nm AS sysNm
+			 	</when>
+				<otherwise>
+			 , sys_nm AS sysNm
+				</otherwise>
+			 </choose>
+			 , sys_extra
+			 , sys_content
+			 , sys_seq
+			 , use_yn
+			 , reg_dtm
+			 , reg_emp_id
+			 , DATE_FORMAT(mod_dtm, '%Y-%m-%d %H:%i:%s') as mod_dtm
+			 , mod_emp_id
+		  FROM rotemDemo_zzz.zzz_system_info
+		 ORDER BY sys_seq
+	</select>
+
+
+</mapper>

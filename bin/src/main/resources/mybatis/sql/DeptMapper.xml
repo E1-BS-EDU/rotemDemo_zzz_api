@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.e1portal.api.dept.mapper.DeptMapper">
+
+    <select id="selectDeptList" resultType="com.e1portal.api.dept.dto.DeptDTO">
+        SELECT 
+            DEPT_CODE,
+            DEPT_NAME,
+            UPPER_DEPT_CODE,
+            USE_YN
+        FROM TB_DEPT
+        WHERE USE_YN = 'Y'
+        ORDER BY DEPT_CODE ASC
+    </select>
+
+    <select id="selectDeptDetail" resultType="com.e1portal.api.dept.dto.DeptDTO">
+        SELECT 
+            DEPT_CODE,
+            DEPT_NAME,
+            UPPER_DEPT_CODE,
+            USE_YN
+        FROM TB_DEPT
+        WHERE DEPT_CODE = #{deptCode}
+    </select>
+
+</mapper>

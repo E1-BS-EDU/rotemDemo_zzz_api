@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rotemDemo.zzz.api.login.mapper.LoginMapper">
+
+    <select id="selectMemberByEmail" parameterType="String" resultType="hashMap">
+       select a.emp_id,
+              a.emp_nm, 
+              a.emp_alias, 
+              a.emp_password,
+              a.emp_email, 
+              a.position_cd,
+              c.com_cd_nm as position_nm, 
+              b.dept_nm,
+              a.dept_cd,
+              a.emp_dept_auth
+         FROM zzz_emp_info a
+         left outer join  zzz_dept_info b
+         on a.dept_cd = b.dept_cd
+         left outer join zzz_code_info c
+         on a.position_cd  = c.com_cd 
+         and c.supi_com_cd ='ZZZ0004'
+        WHERE a.emp_email = #{empEmail}
+          AND a.work_yn ='Y'   -- 재직여부
+          AND a.use_yn = 'Y'
+                          
+    </select>
+
+    <update id="reSetPassword" parameterType="hashMap">
+        update zzz_emp_info
+           set emp_password = #{newPw}
+         where emp_email = #{empEmail}
+    </update>
+
+   <insert id="insertRefreshToken">
+        insert into zzz_user_token (
+            emp_id, token_val, device_info, exp_dt
+        ) VALUES (
+            #{empId}, #{tokenVal}, #{deviceInfo},  #{expDt}
+        )
+    </insert>
+
+    <select id="selectRefreshToken" parameterType="hashMap" resultType="int">
+        select count(*)
+        from zzz_user_token
+        where emp_id = #{empId}
+          and token_val = #{tokenVal}
+          and exp_dt <![CDATA[ > ]]> now()
+    </select>
+
+    <update id="updateRefreshTokenExpiry" parameterType="hashMap">
+        update zzz_user_token
+           set exp_dt = #{expDt}
+         where emp_id    = #{empId}
+           and token_val = #{tokenVal}
+    </update>
+
+    <delete id="deleteRefreshToken" parameterType="hashMap">
+        delete from zzz_user_token
+        where emp_id   = #{empId}
+          and token_val = #{tokenVal}
+    </delete>
+
+    <delete id="deleteAllTokensByUserId" parameterType="hashMap">
+        delete from zzz_user_token
+        where emp_id = #{empId}
+    </delete>
+
+    <delete id="deleteExpiredTokens" parameterType="hashMap">
+        delete from zzz_user_token
+        where exp_dt <![CDATA[ < ]]> now()
+    </delete>    
+</mapper>

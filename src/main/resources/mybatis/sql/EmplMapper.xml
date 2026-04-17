@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rotemDemo.zzz.api.unit.mapper.EmplMapper">
+
+    <select id="selectEmplList" resultType="CamelMap">
+        /** com.rotemDemo.zzz.api.unit.mapper.EmplMappe.selectEmplList **/    
+        select 
+               a.emp_id as empId
+              ,a.emp_nm as empNm
+              ,a.emp_alias as empAlias
+              ,a.dept_cd as deptCd
+              ,b.dept_nm as deptNm
+              ,a.join_date as joinDate
+              ,a.work_yn as workYn
+              ,a.use_yn as useYn
+              ,c.com_cd_nm as jobNm
+         from zzz_emp_info  a
+         left join zzz_dept_info b
+         on a.dept_cd =  b.dept_cd 
+         left join zzz_code_info c
+         on a.position_cd = c.com_cd AND c.supi_com_cd = 'ZZZ0004'
+         where a.use_yn = 'Y'
+       <if test="empId != null and empId != ''">
+           and a.emp_id = #{empId}
+       </if>
+        <if test="empNm != null and empNm != ''">
+           and a.emp_nm like concat('%', #{empNm}, '%')
+        </if>
+    </select>
+
+    <select id="selectEmplInDeptList" resultType="CamelMap">
+        WITH RECURSIVE dept_tree AS (
+            SELECT dept_cd
+              FROM rotemDemo_zzz.zzz_dept_info
+             WHERE dept_cd = #{deptCd}
+               AND use_yn = 'Y'
+
+             UNION ALL
+
+            SELECT d.dept_cd
+              FROM rotemDemo_zzz.zzz_dept_info d
+              JOIN dept_tree t
+                ON d.dept_parent_cd = t.dept_cd
+             WHERE d.use_yn = 'Y'
+        )
+        SELECT e.emp_id      AS empId
+             , e.emp_nm      AS empNm
+             , e.emp_alias   AS empAlias
+             , h.dept_cd     AS deptCd
+             , d.dept_nm     AS deptNm
+             , e.position_cd AS positionCd
+             , c.com_cd_nm   AS jobNm
+             , e.work_yn     AS workYn
+             , e.use_yn      AS useYn
+             , CASE WHEN IFNULL(h.ed_dt, '') = '' THEN 'Y' ELSE 'N' END AS currentDeptYn
+             , h.sd_dt       AS sdDt
+             <!-- , h.ed_dt       AS edDt -->
+             , ifnull(nullif(e.retire_date, ''), nullif(h.ed_dt, ''))       AS edDt
+          FROM dept_tree dt
+          JOIN rotemDemo_zzz.zzz_emp_dept_hist h
+            ON h.dept_cd = dt.dept_cd
+
+          JOIN rotemDemo_zzz.zzz_emp_info e
+            ON e.emp_id = h.emp_id
+           AND e.use_yn = 'Y'
+
+          LEFT JOIN rotemDemo_zzz.zzz_dept_info d
+            ON d.dept_cd = h.dept_cd
+
+          LEFT JOIN rotemDemo_zzz.zzz_code_info c
+            ON c.com_cd = e.position_cd
+           AND c.supi_com_cd = 'ZZZ0004'
+
+        WHERE replace(h.sd_dt, '-', '') <![CDATA[ <= ]]> replace(#{endDate}, '-', '')
+          AND (h.ed_dt IS NULL OR h.ed_dt = '' OR replace(h.ed_dt, '-', '') <![CDATA[ >= ]]> replace(#{startDate}, '-', ''))
+          <if test="workYn != null and workYn != ''">
+          AND e.work_yn = #{workYn}
+          </if>
+        ORDER BY e.work_yn desc, currentDeptYn desc, e.emp_id
+    </select>
+
+    <select id="selectEmpDeptHistByDate" resultType="CamelMap">
+        select h.hist_id as histId,
+               h.emp_id as empId,
+               h.dept_cd as deptCd,
+               h.sd_dt as sdDt,
+               h.ed_dt as edDt
+          from zzz_emp_dept_hist h
+         where h.emp_id = #{empId}
+           and replace(h.sd_dt, '-', '') <![CDATA[ <= ]]> replace(#{targetDate}, '-', '')
+           and (
+                h.ed_dt is null
+                or h.ed_dt = ''
+                or replace(h.ed_dt, '-', '') <![CDATA[ >= ]]> replace(#{targetDate}, '-', '')
+           )
+         order by replace(h.sd_dt, '-', '') desc, h.hist_id desc
+         limit 1
+    </select>
+
+    <select id="selectEmpDeptHistList" resultType="CamelMap">
+        select e.emp_id as empId
+             , e.emp_nm as empNm
+             , e.emp_alias as empAlias
+             , e.dept_cd as deptCd
+             , b.dept_nm as deptNm
+             , e.join_date as joinDate
+             , e.work_yn as workYn
+             , e.use_yn as useYn
+             , c.com_cd_nm as jobNm 
+             , e.retire_date
+             , h.sd_dt
+             , h.ed_dt
+          from rotemDemo_zzz.zzz_emp_info e 
+          left join rotemDemo_zzz.zzz_emp_dept_hist h
+            on e.emp_id = h.emp_id and h.dept_cd = #{deptCd}
+          left join rotemDemo_zzz.zzz_dept_info b
+            on e.dept_cd = b.dept_cd 
+          left join rotemDemo_zzz.zzz_code_info c
+            on e.position_cd = c.com_cd AND c.supi_com_cd = 'ZZZ0004'
+         where 1 = 1
+       <if test="empId != null and empId != ''">
+           and e.emp_id = #{empId}
+       </if>
+        <if test="empNm != null and empNm != ''">
+           and e.emp_nm like concat('%', #{empNm}, '%')
+        </if>
+         order by h.hist_id desc
+         limit 1
+    </select>
+    
+	<select id="selectWorkEmpInfoList" resultType="CamelMap">
+		SELECT 
+			zei.dept_cd,
+			zei.emp_id,
+			zei.emp_nm,
+			zei.work_yn,
+			IFNULL(zei.retire_date, '') retire_date,
+			IFNULL(zdhi.dept_cd, '') zdhi_dept_cd,
+			IFNULL(zdhi.sd_dt, '') start_transfer_date,
+			IFNULL(zdhi.ed_dt, '') end_transfer_date,
+			CASE WHEN IFNULL(zdhi.ed_dt, '') = '' THEN 'Y' ELSE 'N' END AS currentDeptYn
+		  FROM rotemDemo_zzz.zzz_emp_info zei
+		  LEFT JOIN rotemDemo_zzz.zzz_emp_dept_hist zdhi
+			ON zei.emp_id = zdhi.emp_id
+		<if test="deptCdList != null and deptCdList.size() > 0">
+		   AND zdhi.dept_cd IN <foreach collection="deptCdList" item="deptCdItem" open="(" separator="," close=")">
+		      		     	 	#{deptCdItem}
+							   </foreach>
+		</if>
+    	   AND (zdhi.ed_dt BETWEEN #{startDate} AND #{endDate} OR IFNULL(zdhi.ed_dt, '') = '')
+         WHERE 1 = 1
+		<if test="empIdList != null and empIdList.size() > 0">
+		   AND zei.emp_id IN <foreach collection="empIdList" item="empIdItem" open="(" separator="," close=")">
+		      		     	 #{empIdItem}
+		      		     	 </foreach>
+		</if>
+		<if test="workYn != null and workYn != ''">
+		   AND zei.work_yn = #{workYn}
+		</if>
+         ORDER BY zdhi_dept_cd, currentDeptYn desc, zei.emp_id
+    </select>
+
+    <select id="selectWorkdaySummaryEmpTree" resultType="CamelMap">
+        WITH RECURSIVE dept_tree AS (
+            SELECT d.dept_cd
+                , d.dept_parent_cd
+                , d.sort_sn
+                , d.dept_nm
+                , CAST(LPAD(d.sort_sn, 5, '0') AS CHAR(200)) AS dept_path
+                FROM rotemDemo_zzz.zzz_dept_info d
+            WHERE d.dept_parent_cd IS NULL
+                AND d.use_yn = 'Y'
+            UNION ALL
+            SELECT d.dept_cd
+                , d.dept_parent_cd
+                , d.sort_sn
+                , d.dept_nm
+                , CONCAT(t.dept_path, '-', LPAD(d.sort_sn, 5, '0')) AS dept_path
+                FROM rotemDemo_zzz.zzz_dept_info d
+                JOIN dept_tree t ON d.dept_parent_cd = t.dept_cd
+            WHERE d.use_yn = 'Y'
+        ),
+        emp_list AS (
+            SELECT ei.emp_id AS empId
+                , ei.emp_nm AS empNm
+                , eh.dept_cd AS deptCd
+                , GREATEST(IFNULL(NULLIF(eh.sd_dt,''),#{startDate}),#{startDate}) AS sdYear
+                , IF(IFNULL(eh.ed_dt,'')='',
+                        IF(IFNULL(ei.retire_date,'')='',#{endDate},ei.retire_date),
+                        eh.ed_dt) AS edYear
+                , IF(IFNULL(eh.ed_dt,'')='',
+                        IF(IFNULL(ei.retire_date,'')='','',ei.retire_date),
+                        eh.ed_dt) AS tempEdYear
+                FROM rotemDemo_zzz.zzz_emp_dept_hist eh
+                JOIN rotemDemo_zzz.zzz_emp_info ei ON eh.emp_id = ei.emp_id
+            WHERE ei.use_yn = 'Y'
+                AND (IFNULL(eh.ed_dt,'')='' OR eh.ed_dt BETWEEN #{startDate} AND #{endDate})
+                <if test="deptCdList != null and deptCdList.size() > 0">
+                AND eh.dept_cd IN
+                <foreach collection="deptCdList" item="deptCdItem" open="(" separator="," close=")">
+                    #{deptCdItem}
+                </foreach>
+                </if>
+                <if test="empId != null and empId != ''">
+                AND ei.emp_id = #{empId}
+                </if>
+                <if test="empIdList != null and empIdList.size() > 0">
+                AND ei.emp_id IN
+                <foreach collection="empIdList" item="empIdItem" open="(" separator="," close=")">
+                    #{empIdItem}
+                </foreach>
+                </if>
+        )
+        SELECT e.empId
+            , e.empNm
+            , e.deptCd
+            , dt.dept_nm AS deptNm
+            , dt.dept_path AS deptPath
+            , e.sdYear
+            , e.edYear
+            , e.tempEdYear
+            FROM emp_list e
+            LEFT JOIN dept_tree dt ON e.deptCd = dt.dept_cd
+        ORDER BY dt.dept_path, e.empId
+    </select>
+</mapper>

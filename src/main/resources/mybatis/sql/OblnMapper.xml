@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.rotemDemo.zzz.api.unit.mapper.OblnMapper">
+
+    <select id="selectOblnList" parameterType="hashMap" resultType="hashMap">
+        select 
+			 mlg_obj_id    as mlgObjId
+			,mlg_obj_nm    as mlgObjNm
+			,type_cd       as typeCd
+			,lang_cd       as langCd
+			,sys_id        as sysId
+	    from zzz_obln_info 
+    </select>
+
+</mapper>
